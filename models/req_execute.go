@@ -1,12 +1,12 @@
 package models
 
 import (
-	"github.com/XunleiBlockchain/baas-demo/contract"
-
 	"encoding/json"
 	"errors"
 
 	"github.com/XunleiBlockchain/tc-libs/common"
+
+	"github.com/XunleiBlockchain/baas-demo/contract"
 )
 
 type ReqExecute struct {
@@ -54,9 +54,19 @@ func (re *ReqExecute) Execute() (interface{}, error) {
 			"data": cdata,
 		},
 	}
-	res, sdkerr := sdkInstance.SendContractTransaction(backReqParam)
-	if sdkerr != nil && sdkerr.Code != 0 {
-		return nil, sdkerr
+	var ret interface{}
+	if useSDK {
+		res, sdkErr := sdkInstance.SendContractTransaction(backReqParam)
+		if sdkErr != nil && sdkErr.Code != 0 {
+			return nil, sdkErr
+		}
+		ret = res
+	} else {
+		res, err := backCall("sendContractTransaction", backReqParam)
+		if err != nil {
+			return nil, err
+		}
+		ret = res
 	}
-	return res, nil
+	return ret, nil
 }

@@ -2,32 +2,38 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 
+	sdk "github.com/XunleiBlockchain/baas-sdk-go"
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
+
 	"github.com/XunleiBlockchain/baas-demo/models"
 	_ "github.com/XunleiBlockchain/baas-demo/routers"
-	sdk "github.com/XunleiBlockchain/baas-sdk-go"
 
 	// import contracts to do `init`
 	_ "github.com/XunleiBlockchain/baas-demo/contract/ERC20"
 	_ "github.com/XunleiBlockchain/baas-demo/contract/KVDB"
 	_ "github.com/XunleiBlockchain/baas-demo/contract/StructDataRecord"
-
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/logs"
 )
 
+var useSDK = flag.Bool("sdk", false, "Use SDK in demo or not")
+
 func main() {
+	flag.Parse()
+
 	log := logs.NewLogger()
 	log.SetLogger(logs.AdapterFile, `{"filename":"baas-demo.log"}`)
 
-	err := initBaasSDK()
-	if err != nil {
-		panic("[initBaasSDK] error: " + err.Error())
+	if *useSDK {
+		if err := initBaasSDK(); err != nil {
+			panic("[initBaasSDK] error: " + err.Error())
+		}
+		sdkInstance := sdk.GetSDK(log)
+		models.InitSDK(sdkInstance)
 	}
-	sdkInstance := sdk.GetSDK(log)
-	models.InitSDK(sdkInstance)
 
 	beego.Run()
 }

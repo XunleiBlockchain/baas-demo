@@ -40,5 +40,19 @@ func (rgt *ReqGetTx) GetTx() (interface{}, error) {
 		rgt.Account,
 		rgt.Hash,
 	}
-	return backCall("getTransactionReceipt", backReqParam)
+	var ret interface{}
+	if useSDK {
+		res, sdkErr := sdkInstance.GetTransactionReceipt(backReqParam)
+		if sdkErr != nil && sdkErr.Code != 0 {
+			return nil, sdkErr
+		}
+		ret = res
+	} else {
+		res, err := backCall("call", backReqParam)
+		if err != nil {
+			return nil, err
+		}
+		ret = res
+	}
+	return ret, nil
 }

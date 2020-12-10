@@ -17,7 +17,7 @@ func (e *ErrWrapper) Error() string {
 
 func (e *ErrWrapper) Join(err error) *ErrWrapper {
 	return &ErrWrapper{
-		code: e.code,
+		code:   e.code,
 		errmsg: fmt.Sprintf("%s %v", e.errmsg, err),
 	}
 }
