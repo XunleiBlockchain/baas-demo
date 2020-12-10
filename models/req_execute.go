@@ -48,11 +48,15 @@ func (re *ReqExecute) Execute() (interface{}, error) {
 	}
 	//from address should be unlocked in sdk-server
 	backReqParam := []interface{}{
-		map[string]string{
+		map[string]interface{}{
 			"from": re.Account,
 			"to":   re.Addr,
 			"data": cdata,
 		},
 	}
-	return backCall("sendContractTransaction", backReqParam)
+	res, sdkerr := sdkInstance.SendContractTransaction(backReqParam)
+	if sdkerr != nil && sdkerr.Code != 0 {
+		return nil, sdkerr
+	}
+	return res, nil
 }

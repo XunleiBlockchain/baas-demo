@@ -6,10 +6,20 @@ import (
 	"fmt"
 	"reflect"
 
+	sdk "github.com/XunleiBlockchain/baas-sdk-go"
+
 	"github.com/XunleiBlockchain/tc-libs/common"
 
 	"github.com/XunleiBlockchain/baas-demo/contract"
 )
+
+var (
+	sdkInstance sdk.SDK
+)
+
+func InitSDK(s sdk.SDK) {
+	sdkInstance = s
+}
 
 type ReqCall struct {
 	Account  string        `json:"account"`
@@ -49,15 +59,15 @@ func (rc *ReqCall) Call() (interface{}, error) {
 		return nil, err
 	}
 	backReqParam := []interface{}{
-		map[string]string{
+		map[string]interface{}{
 			"from": rc.Account,
 			"to":   rc.Addr,
 			"data": cdata,
 		},
 	}
-	ret, err := backCall("call", backReqParam)
-	if err != nil {
-		return nil, err
+	ret, sdkErr := sdkInstance.Call(backReqParam)
+	if sdkErr != nil && sdkErr.Code != 0 {
+		return nil, sdkErr
 	}
 	data, ok := ret.(string)
 	if !ok {
