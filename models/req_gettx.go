@@ -16,6 +16,9 @@ func (rgt *ReqGetTx) Parse(rbody []byte) error {
 	if err := json.Unmarshal(rbody, rgt); err != nil {
 		return err
 	}
+	if !common.HasHexPrefix(rgt.Hash) {
+		rgt.Hash = "0x" + rgt.Hash
+	}
 	if err := rgt.Sanity(); err != nil {
 		return err
 	}
@@ -26,17 +29,14 @@ func (rgt *ReqGetTx) Sanity() error {
 	if !common.IsHexAddress(rgt.Account) {
 		return errors.New("account address illegal")
 	}
-	if len(rgt.Hash) == 2+2*common.HashLength && common.IsHex(rgt.Hash) {
-		return nil
-	}
-	if len(rgt.Hash) == 2*common.HashLength && common.IsHex("0x"+rgt.Hash) {
+	if len(rgt.Hash) == 2+2*common.HashLength && common.IsHex(rgt.Hash[2:]) {
 		return nil
 	}
 	return errors.New("tx hash illegal")
 }
 
 func (rgt *ReqGetTx) GetTx() (interface{}, error) {
-	backReqParam := []string{
+	backReqParam := []interface{}{
 		rgt.Account,
 		rgt.Hash,
 	}
