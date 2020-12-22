@@ -28,46 +28,47 @@ func main() {
 	log.SetLogger(logs.AdapterFile, `{"filename":"baas-demo.log"}`)
 
 	if *useSDK {
-		if err := initBaasSDK(); err != nil {
-			panic("[initBaasSDK] error: " + err.Error())
+		sdkConf, err := initBaasSDKConfig()
+		if err != nil {
+			panic("[initBaasSDKConfig] error: " + err.Error())
 		}
-		sdkInstance := sdk.GetSDK(log)
+		sdkInstance, err := sdk.NewSDK(sdkConf, log)
+		if err != nil {
+			panic("[sdk.NewSDK] error: " + err.Error())
+		}
 		models.InitSDK(sdkInstance)
 	}
 
 	beego.Run()
 }
 
-func initBaasSDK() error {
-	dnscacheUpdateintervalConf, _ := beego.AppConfig.Int("dnscache_updateinterval")
+func initBaasSDKConfig() (*sdk.Config, error) {
 	chainidConf, _ := beego.AppConfig.Int64("chainid")
 	sdkConf := &sdk.Config{
-		Keystore:               beego.AppConfig.String("keystore"),
-		UnlockAccounts:         make(map[string]string),
-		DNSCacheUpdateInterval: dnscacheUpdateintervalConf,
-		RPCProtocal:            beego.AppConfig.String("rpc_protocal"),
-		XHost:                  beego.AppConfig.String("xhost"),
-		Namespace:              beego.AppConfig.String("namespace"),
-		ChainID:                chainidConf,
+		Keystore:       beego.AppConfig.String("keystore"),
+		UnlockAccounts: make(map[string]string),
+		RPCProtocal:    beego.AppConfig.String("rpc_protocal"),
+		XHost:          beego.AppConfig.String("xhost"),
+		Namespace:      beego.AppConfig.String("namespace"),
+		ChainID:        chainidConf,
 	}
 
 	authInfoJSON, err := ioutil.ReadFile("./conf/auth.json")
 	if err != nil {
-		return fmt.Errorf("can not read auth.json file, error: %v", err)
+		return nil, fmt.Errorf("can not read auth.json file, error: %v", err)
 	}
 	err = json.Unmarshal(authInfoJSON, &sdkConf.AuthInfo)
 	if err != nil {
-		return fmt.Errorf("can not unmarshal auth json, error: %v", err)
+		return nil, fmt.Errorf("can not unmarshal auth json, error: %v", err)
 	}
 	passwdsJSON, err := ioutil.ReadFile("./conf/passwd.json")
 	if err != nil {
-		return fmt.Errorf("can not read passwd.json file, error: %v", err)
+		return nil, fmt.Errorf("can not read passwd.json file, error: %v", err)
 	}
 	err = json.Unmarshal(passwdsJSON, &sdkConf.UnlockAccounts)
 	if err != nil {
-		return fmt.Errorf("can not unmarshal passwd json, error: %v", err)
+		return nil, fmt.Errorf("can not unmarshal passwd json, error: %v", err)
 	}
 
-	sdk.Conf = sdkConf
-	return nil
+	return sdkConf, nil
 }
